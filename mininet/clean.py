@@ -81,7 +81,8 @@ def cleanup():
 
     info( "*** Removing all links of the pattern foo-ethX\n" )
     links = sh( "ip link show | "
-                "egrep -o '([-_.[:alnum:]]+-eth[[:digit:]]+)'" ).splitlines()
+                "egrep -o '[[:digit:]]+-[[:digit:]]+'").splitlines()
+                #"egrep -o '([-_.[:alnum:]]+-eth[[:digit:]]+)'" ).splitlines()
     for link in links:
         if link:
             sh( "ip link del " + link )

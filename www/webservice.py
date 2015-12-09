@@ -22,6 +22,7 @@ from mininet.node import RemoteController, OVSSwitch, Host
 from mininet import CustomLink
 from mininet.log import setLogLevel
 from mininet.link import Intf, Link
+from mininet.clean import cleanup
 #from subprocess import check_call
 import subprocess 
 import urllib
@@ -737,10 +738,21 @@ def main():
             for controller in net.controllers:
                 controller.stop()
                 controller.start()
-            for node in nodes:
-                node.stop()
-                node.start( net.controllers )
-
+            for node in net.switches:
+                 node.stop()
+                 node.start( net.controllers )
+                 for intf in node.intfList():
+                     print "INterface: {0}".format(intf.status())
+                     print "{0}".format(intf.isUp())
+                     print "{0}".format(intf.ifconfig())
+                     if(intf.status() != "up"):
+                         intf.name = str(intf.name)
+                         intf.port = str(intf.port)
+                         parg = "{0}: {1}"
+                         print parg.format(intf.name, type(intf.name))
+                         print parg.format(intf.port, type(intf.port))
+                         node.attach(intf)
+                         
         return format_results( [{'name': "{0}".format(link)}] )
 
     @route('/delete_link')
@@ -927,7 +939,9 @@ def main():
 
         net.stop()
         is_running = False
+        cleanup()
         
+
         # reinitialize mininet
         net = Mininet(
             topo=None,
