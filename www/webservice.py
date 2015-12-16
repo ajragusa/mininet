@@ -735,24 +735,18 @@ def main():
         )
 
         if(is_running):
-            for controller in net.controllers:
-                controller.stop()
-                controller.start()
-            for node in net.switches:
-                 node.stop()
-                 node.start( net.controllers )
-                 for intf in node.intfList():
-                     print "INterface: {0}".format(intf.status())
-                     print "{0}".format(intf.isUp())
-                     print "{0}".format(intf.ifconfig())
-                     if(intf.status() != "up"):
-                         intf.name = str(intf.name)
-                         intf.port = str(intf.port)
-                         parg = "{0}: {1}"
-                         print parg.format(intf.name, type(intf.name))
-                         print parg.format(intf.port, type(intf.port))
-                         node.attach(intf)
-                         
+            actual_node = net.getNodeByName(node_a)
+            actual_node.stop()
+            actual_node.start( net.controllers )
+            actual_node.attach( actual_node.intf(intf_a) )
+            
+            actual_node = net.getNodeByName(node_z)
+            actual_node.stop()
+            actual_node.start( net.controllers )
+            actual_node.attach( actual_node.intf(intf_z))
+                     
+        update_link({'link': name, 'status': 1})
+    
         return format_results( [{'name': "{0}".format(link)}] )
 
     @route('/delete_link')
@@ -768,6 +762,7 @@ def main():
 
         for link in net.links:
             if("{0}".format(link) == link_name):
+                update_link({'link': link, 'status': 0} )
                 link.stop()
                 link.delete()
                 net.links.remove(link)
@@ -787,10 +782,13 @@ def main():
         status = params.get('status')
         link = net.getLink(name=link);
 
+        print "Update Link: %s" % link
+
         if(status is not None):
             if(status == 1):
                 # make link up by up'ing it's first interface
                 out, err, code = link.node1.pexec('ifconfig {0} up'.format(link.intf1.br_name))
+                out, err, code = link.node2.pexec('ifconfig {0} up'.format(link.intf2.br_name))
                 if(code):
                      return format_results(out, err)
                 return format_results([{
@@ -798,8 +796,9 @@ def main():
                 }])
 
             else:
-                # make link up by up'ing it's first interface
+                # make link down by down'ing it's first interface
                 out, err, code = link.node1.pexec('ifconfig {0} down'.format(link.intf1.br_name))
+                out, err, code = link.node2.pexec('ifconfig {0} down'.format(link.intf2.br_name))
                 if(code):
                     return format_results(out, err)
                 return format_results([{

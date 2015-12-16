@@ -1125,6 +1125,15 @@ class OVSSwitch( Switch ):
         if isinstance( intf, TCIntf ):
             intf.config( **intf.params )
 
+    def unattach( self, intf):
+        "Connect a data port"
+        if(intf.name == 'lo'):
+            pass
+        else:
+            iface = "{0}-{1}".format(self.id, intf.port) # Interface number on veth pair
+            cmd = 'ovs-vsctl del-port'
+            self.cmd(cmd, self.br_name, str(intf.name))
+
     def attach( self, intf ):
         "Connect a data port"
         if(intf.name == 'lo'):
@@ -1132,7 +1141,7 @@ class OVSSwitch( Switch ):
         else:
             iface = "{0}-{1}".format(self.id, intf.port) # Interface number on veth pair
             cmd = 'ovs-vsctl -- --id=@intName create Interface name="' + iface + '" -- add-port'
-            self.cmd(cmd, self, str(intf.name), "Interface=@intName")
+            self.cmd(cmd, self.br_name, str(intf.name), "Interface=@intName")
             self.cmd("ifconfig", iface, "up")
             self.TCReapply( intf )
 
