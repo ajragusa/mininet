@@ -11,7 +11,10 @@ sys.path.insert(0, libdir+'/lib')
 
 import re
 import socket
+import time
 import fcntl
+import gevent.queue
+import grnoc
 import struct
 import xml.etree.ElementTree as ET
 from mininet.cli import CLI
@@ -951,6 +954,47 @@ def main():
             host=Host
         )
         return format_results( [{ "msg": "Mininet was been reset" }] )
+
+    @route('/count_packets')
+    @validate_params(
+        method_name = 'count_packets',
+        method_description = 'Counts the number of packets received based on parameters.',
+        host   = { 'required': True, 'checks': [ node_exists() ] },
+        intf   = { 'required': True, 'type': 'string' },
+        filter  = { 'required': True, 'type': 'string' },
+        timeout = { 'type': 'integer' }
+    )
+    def count_packets(params):
+        host = params.get('host')
+        intf = params.get('intf')
+        tfilter = params.get('filter')
+        timeout = params.get('timeout')
+        if timeout is None:
+            timeout = 3
+        else:
+            timeout = int(timeout)
+
+        host = net.getNodeByName(host)
+        intf = host.nameToIntf[ intf ]
+        intf_name = "%s-%s" % (str(host.id), str(host.ports[ intf ]))
+
+        # pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter)
+        # pc.start()
+        # time.sleep(timeout)
+        # pc.stop()
+        # return format_results( {'count': pc.count} )
+
+        body = gevent.queue.Queue()
+        body.put("stuff")
+        pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter, timeout=timeout)
+        pc.on_data(body.put)
+        pc.on_finish(lambda: body.put(StopIteration))
+        pc.start()
+        # time.sleep(timeout)
+        # pc.stop()
+        # return format_results( {'count': pc.count} )
+        return body
+        
 
     @route('/')
     @route('/help')
