@@ -13,7 +13,6 @@ import re
 import socket
 import time
 import fcntl
-import gevent.queue
 import grnoc
 import struct
 import xml.etree.ElementTree as ET
@@ -978,12 +977,13 @@ def main():
         intf = host.nameToIntf[ intf ]
         intf_name = "%s-%s" % (str(host.id), str(host.ports[ intf ]))
 
-        pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter)
+        pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter, timeout=timeout)
         pc.start()
-        time.sleep(timeout)
-        pc.stop()
-        return format_results( {'count': pc.count} )
-        
+        pc.join()
+        #time.sleep(timeout)
+        #pc.stop()
+        return format_results( {'packet_count': pc.count} )
+
 
     @route('/')
     @route('/help')
@@ -1008,7 +1008,7 @@ def main():
         methods.sort()
         return format_results( methods )
 
-    run(host="0.0.0.0", port=8080)
+    run(server='paste', host="0.0.0.0", port=8080)
 
     if(is_running):
         net.stop()

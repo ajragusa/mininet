@@ -9,7 +9,7 @@ class PacketCounter(threading.Thread):
     count = 0
     capture = True
 
-    def __init__(self, iface=None, tfilter=""):
+    def __init__(self, iface=None, tfilter="", timeout=3):
         """
         iface   Interface to capture traffic. By default capture on all.
         tfilter A Berkeley Packet Filter. http://biot.com/capstats/bpf.html
@@ -17,19 +17,14 @@ class PacketCounter(threading.Thread):
         threading.Thread.__init__(self)
         self.iface   = iface
         self.tfilter = tfilter
+        self.timeout = timeout
     
     def run(self):
         try:
-            sniff(iface=self.iface, prn=self._pkt_handler, filter=self.tfilter, store=0)
+            sniff(iface=self.iface, prn=self._pkt_handler, filter=self.tfilter, store=0, timeout=self.timeout)
         except Exception:
             print sys.exc_info()[0]
 
-    def stop(self):
-        self.capture = False
-
     def _pkt_handler(self, pkt):
-        if not self.capture:
-            raise Exception("EXIT: PacketCounter")
-        else:
-            self.count += 1
+        self.count += 1
 
