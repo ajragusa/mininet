@@ -978,22 +978,11 @@ def main():
         intf = host.nameToIntf[ intf ]
         intf_name = "%s-%s" % (str(host.id), str(host.ports[ intf ]))
 
-        # pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter)
-        # pc.start()
-        # time.sleep(timeout)
-        # pc.stop()
-        # return format_results( {'count': pc.count} )
-
-        body = gevent.queue.Queue()
-        body.put("stuff")
-        pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter, timeout=timeout)
-        pc.on_data(body.put)
-        pc.on_finish(lambda: body.put(StopIteration))
+        pc = grnoc.PacketCounter(iface=intf_name, tfilter=tfilter)
         pc.start()
-        # time.sleep(timeout)
-        # pc.stop()
-        # return format_results( {'count': pc.count} )
-        return body
+        time.sleep(timeout)
+        pc.stop()
+        return format_results( {'count': pc.count} )
         
 
     @route('/')
