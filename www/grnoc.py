@@ -20,10 +20,8 @@ class PacketCounter(threading.Thread):
         self.timeout = timeout
     
     def run(self):
-        try:
-            sniff(iface=self.iface, prn=self._pkt_handler, filter=self.tfilter, store=0, timeout=self.timeout)
-        except Exception:
-            print sys.exc_info()[0]
+        sniff(iface=self.iface, prn=self._pkt_handler, filter=self.tfilter, store=0, timeout=self.timeout)
+        time.sleep(1) # Hack to ensure sniff can be used in a multi-thread context
 
     def _pkt_handler(self, pkt):
         self.count += 1
